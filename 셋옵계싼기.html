@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>세트 옵션 계산기</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+        h3 {
+            margin-top: 20px;
+            color: #34495e;
+            font-size: 20px;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .option-group {
+            margin-bottom: 15px;
+        }
+        .option-group label {
+            font-weight: bold;
+            margin-right: 10px;
+            display: block;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        .option-group select, .option-group input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            width: 100%;
+            font-size: 14px;
+            background-color: #f9f9f9;
+            transition: border-color 0.3s ease;
+        }
+        .option-group select:hover, .option-group input:hover {
+            border-color: #3498db;
+        }
+        .result {
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #ecf0f1;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .result span {
+            font-weight: bold;
+        }
+        .result-prev {
+            color: #e74c3c;
+        }
+        .result-after {
+            color: #2ecc71;
+        }
+        .add-button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        .add-button:hover {
+            background-color: #2980b9;
+        }
+        .error-message {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>세트 옵션 계산기</h2>
+
+        <!-- 세트별 옵션 -->
+        <h3>이전 </h3>
+        <div class="grid-container" id="previous-options-container"></div>
+
+        <h3>이후 </h3>
+        <div class="grid-container" id="after-options-container"></div>
+
+        <!-- 최종 결과 -->
+        <div class="result">최댐: <span id="prev-최댐" class="result-prev">0</span> → <span id="after-최댐" class="result-after">0</span> | 차이: <span id="diff-최댐">0</span></div>
+        <div class="result">종댐: <span id="prev-종댐" class="result-prev">0</span> → <span id="after-종댐" class="result-after">0</span> | 차이: <span id="diff-종댐">0</span></div>
+        <div class="result">치피: <span id="prev-치피" class="result-prev">0</span> → <span id="after-치피" class="result-after">0</span> | 차이: <span id="diff-치피">0</span></div>
+        <div class="result">보공: <span id="prev-보공" class="result-prev">0</span> → <span id="after-보공" class="result-after">0</span> | 차이: <span id="diff-보공">0</span></div>
+        <div class="result">물댐: <span id="prev-물댐" class="result-prev">0</span> → <span id="after-물댐" class="result-after">0</span> | 차이: <span id="diff-물댐">0</span></div>
+        <div class="result">물공: <span id="prev-물공" class="result-prev">0</span> → <span id="after-물공" class="result-after">0</span> | 차이: <span id="diff-물공">0</span></div>
+        <div class="result">방무: <span id="prev-방무" class="result-prev">0</span> → <span id="after-방무" class="result-after">0</span> | 차이: <span id="diff-방무">0</span></div>
+
+        <!-- 버튼 추가 -->
+        <button class="add-button" onclick="addSetOption()">세트 옵션 추가</button>
+    </div>
+
+    <script>
+        // 상수 정의
+        const STATS = ["최댐", "종댐", "치피", "보공", "물댐", "물공", "방무"];
+        const SET_OPTIONS = {
+            "아케인": { 
+                "1": { "최댐": 0, "종댐": 0, "치피": 0, "보공": 0, "물댐": 0, "물공": 0, "방무": 0 },
+                "2": { "최댐": 110000000, "종댐": 7, "치피": 50, "보공": 17, "물댐": 20, "물공": 30, "방무": 15 },
+                "3": { "최댐": 140000000, "종댐": 9, "치피": 60, "보공": 19, "물댐": 24, "물공": 34, "방무": 20 },
+                "4": { "최댐": 170000000, "종댐": 12, "치피": 80, "보공": 21, "물댐": 28, "물공": 38, "방무": 25 },
+                "5": { "최댐": 200000000, "종댐": 16, "치피": 104, "보공": 24, "물댐": 32, "물공": 42, "방무": 30 },
+                "6": { "최댐": 250000000, "종댐": 21, "치피": 128, "보공": 28, "물댐": 37, "물공": 47, "방무": 35 },
+                "7": { "최댐": 350000000, "종댐": 27, "치피": 158, "보공": 33, "물댐": 62, "물공": 77, "방무": 40 }
+            },
+            "앱솔": { 
+                "1": { "최댐": 0, "종댐": 0, "치피": 0, "보공": 0, "물댐": 0, "물공": 0, "방무": 0 },
+                "2": { "최댐": 5500000, "종댐": 0, "치피": 22, "보공": 6, "물댐": 5, "물공": 5, "방무": 5 },
+                "3": { "최댐": 11000000, "종댐": 0, "치피": 24, "보공": 7, "물댐": 6.5, "물공": 6.5, "방무": 8 },
+                "4": { "최댐": 18500000, "종댐": 0, "치피": 69, "보공": 8, "물댐": 8, "물공": 8, "방무": 11 },
+                "5": { "최댐": 28000000, "종댐": 0, "치피": 76, "보공": 9, "물댐": 9.5, "물공": 9.5, "방무": 14 },
+                "6": { "최댐": 38500000, "종댐": 0, "치피": 83, "보공": 10, "물댐": 11, "물공": 11, "방무": 17 },
+                "7": { "최댐": 49000000, "종댐": 0, "치피": 130, "보공": 11, "물댐": 50, "물공": 57, "방무": 23 }
+            },
+            "팦레": {
+                "1": { "최댐": 0, "종댐": 0, "치피": 0, "보공": 0, "물댐": 0, "물공": 0, "방무": 0 },
+                "2": { "최댐": 500000, "종댐": 0, "치피": 44.5, "보공": 0, "물댐": 25, "물공": 30, "방무": 5 },
+                "3": { "최댐": 1050000, "종댐": 0, "치피": 49.3, "보공": 0, "물댐": 35, "물공": 45, "방무": 10 },
+                "4": { "최댐": 3150000, "종댐": 0, "치피": 54.1, "보공": 0, "물댐": 45, "물공": 50, "방무": 15 }
+            },
+            "팦유": {
+                "1": { "최댐": 0, "종댐": 0, "치피": 0, "보공": 0, "물댐": 0, "물공": 0, "방무": 0 },
+                "2": { "최댐": 0, "종댐": 0, "치피": 44.1, "보공": 0, "물댐": 0, "물공": 0, "방무": 0 },
+                "3": { "최댐": 0, "종댐": 0, "치피": 48.3, "보공": 0, "물댐": 0, "물공": 40, "방무": 0 },
+                "4": { "최댐": 0, "종댐": 0, "치피": 52.5, "보공": 0, "물댐": 40, "물공": 45, "방무": 0 }
+            },
+            "펜살": {
+                "1": { "최댐": 0, "종댐": 0, "치피": 0, "보공": 0, "물댐": 0, "물공": 0, "방무": 0 },
+                "2": { "최댐": 0, "종댐": 0, "치피": 44.1, "보공": 0, "물댐": 0, "물공": 0, "방무": 0 },
+                "3": { "최댐": 0, "종댐": 0, "치피": 0, "보공": 0, "물댐": 0, "물공": 0, "방무": 0 }
+            },
+            "무스펠": {
+                "1": { "최댐": 0, "종댐": 0, "치피": 0, "보공": 0, "물댐": 0, "물공": 0, "방무": 0 },
+                "2": { "최댐": 0, "종댐": 0, "치피": 42, "보공": 0, "물댐": 0, "물공": 0, "방무": 0 },
+                "3": { "최댐": 0, "종댐": 0, "치피": 0, "보공": 0, "물댐": 0, "물공": 0, "방무": 0 }
+            }
+        };
+
+        const STARFORCE_OPTIONS = {
+            "아케인": {
+                "55": { "최댐": 50000000, "종댐": 9, "치피": 0, "보공": 16, "물댐": 17, "물공": 17, "방무": 7 },
+                "80": { "최댐": 60000000, "종댐": 11, "치피": 0, "보공": 19, "물댐": 19.5, "물공": 19.5, "방무": 8 },
+                "105": { "최댐": 70000000, "종댐": 13, "치피": 0, "보공": 22, "물댐": 22, "물공": 22, "방무": 9 },
+                "130": { "최댐": 80000000, "종댐": 15, "치피": 0, "보공": 25, "물댐": 24.5, "물공": 24.5, "방무": 10 },
+                "155": { "최댐": 90000000, "종댐": 17, "치피": 0, "보공": 28, "물댐": 27, "물공": 27, "방무": 11 },
+                "180": { "최댐": 100000000, "종댐": 19, "치피": 0, "보공": 31, "물댐": 29.5, "물공": 29.5, "방무": 12 },
+                "205": { "최댐": 130000000, "종댐": 21, "치피": 0, "보공": 34, "물댐": 32, "물공": 32, "방무": 13 },
+                "230": { "최댐": 200000000, "종댐": 23, "치피": 0, "보공": 37, "물댐": 34.5, "물공": 34.5, "방무": 14 },
+                "255": { "최댐": 310000000, "종댐": 25, "치피": 0, "보공": 40, "물댐": 37, "물공": 37, "방무": 15 },
+                "280": { "최댐": 440000000, "종댐": 27, "치피": 0, "보공": 43, "물댐": 39.5, "물공": 39.5, "방무": 16 }
+            },
+            "앱솔": {
+                "70": { "최댐": 5000000, "종댐": 0, "치피": 0, "보공": 10, "물댐": 14, "물공": 12, "방무": 3 },
+                "140": { "최댐": 11000000, "종댐": 0, "치피": 0, "보공": 13, "물댐": 16.5, "물공": 14.5, "방무": 5 },
+                "210": { "최댐": 18500000, "종댐": 5, "치피": 0, "보공": 16, "물댐": 19, "물공": 17, "방무": 7 },
+                "245": { "최댐": 29000000, "종댐": 10, "치피": 0, "보공": 19, "물댐": 21.5, "물공": 19.5, "방무": 9 },
+                "280": { "최댐": 42500000, "종댐": 15, "치피": 0, "보공": 22, "물댐": 24, "물공": 22, "방무": 11 }
+            },
+            "팦레": {
+                "30": { "최댐": 2100000, "종댐": 0, "치피": 0, "보공": 7.5, "물댐": 10, "물공": 9, "방무": 0 },
+                "60": { "최댐": 4100000, "종댐": 0, "치피": 0, "보공": 10, "물댐": 11.5, "물공": 10.5, "방무": 0 },
+                "90": { "최댐": 6100000, "종댐": 4, "치피": 0, "보공": 12.5, "물댐": 13, "물공": 12, "방무": 0 },
+                "120": { "최댐": 11600000, "종댐": 9, "치피": 0, "보공": 15, "물댐": 14.5, "물공": 13.5, "방무": 0 }
+            },
+            "팦유": {
+                "30": { "최댐": 0, "종댐": 0, "치피": 0, "보공": 5, "물댐": 9, "물공": 8, "방무": 0 },
+                "60": { "최댐": 0, "종댐": 0, "치피": 0, "보공": 7.5, "물댐": 10.5, "물공": 9.5, "방무": 0 },
+                "90": { "최댐": 1000000, "종댐": 0, "치피": 0, "보공": 10, "물댐": 12, "물공": 11, "방무": 0 },
+                "120": { "최댐": 2400000, "종댐": 5, "치피": 0, "보공": 12.5, "물댐": 13.5, "물공": 12.5, "방무": 5 }
+            },
+            "펜살": {
+                "30": { "최댐": 0, "종댐": 0, "치피": 0, "보공": 0, "물댐": 3, "물공": 3, "방무": 0 }
+            },
+            "무스펠": {
+                "25": { "최댐": 0, "종댐": 0, "치피": 0, "보공": 0, "물댐": 1, "물공": 1, "방무": 0 }
+            }
+        };
+
+        const STARFORCE_REQUIREMENTS = {
+            "아케인": 15,
+            "앱솔": 10,
+            "팦레": 5,
+            "팦유": 0,
+            "펜살": 0,
+            "무스펠": 0
+        };
+
+        // 세트 옵션 추가
+        function addSetOption() {
+            const previousContainer = document.getElementById("previous-options-container");
+            const afterContainer = document.getElementById("after-options-container");
+
+            previousContainer.appendChild(createSetOptionDiv());
+            afterContainer.appendChild(createSetOptionDiv());
+            updateTotal();
+        }
+
+        // 세트 옵션 생성
+        function createSetOptionDiv() {
+            const setDiv = document.createElement("div");
+            setDiv.classList.add("option-group");
+            setDiv.innerHTML = `
+                <label for="set-type">세트 선택:</label>
+                <select class="set-type">
+                    <option value="">세트 선택</option>
+                    ${Object.keys(SET_OPTIONS).map(set => `<option value="${set}">${set}</option>`).join("")}
+                </select>
+                <label for="set-count">세트 개수:</label>
+                <select class="set-count">
+                    ${[1, 2, 3, 4, 5, 6, 7].map(count => `<option value="${count}">${count}세트</option>`).join("")}
+                </select>
+                <label for="starforce">스타포스:</label>
+                <select class="starforce">
+                    <option value="0">0</option>
+                </select>
+                <div class="error-message"></div>
+            `;
+
+            const setTypeSelector = setDiv.querySelector(".set-type");
+            const starforceSelector = setDiv.querySelector(".starforce");
+
+            setTypeSelector.addEventListener("change", () => {
+                updateStarforceOptions(starforceSelector, setTypeSelector.value);
+                updateTotal();
+            });
+
+            setDiv.querySelector(".set-count").addEventListener("change", updateTotal);
+            starforceSelector.addEventListener("change", updateTotal);
+
+            return setDiv;
+        }
+
+        // 스타포스 옵션 업데이트
+        function updateStarforceOptions(selector, setType) {
+            selector.innerHTML = '<option value="0">0</option>';
+            if (setType && STARFORCE_OPTIONS[setType]) {
+                Object.keys(STARFORCE_OPTIONS[setType]).forEach(starforce => {
+                    const option = document.createElement("option");
+                    option.value = starforce;
+                    option.textContent = starforce;
+                    selector.appendChild(option);
+                });
+            }
+        }
+
+        // 스탯 계산
+        function calculateStats(containerId) {
+            const stats = { "최댐": 0, "종댐": 0, "치피": 0, "보공": 0, "물댐": 0, "물공": 0, "방무": 0 };
+            const sets = document.querySelectorAll(`#${containerId} .option-group`);
+
+            sets.forEach(setDiv => {
+                const setType = setDiv.querySelector(".set-type").value;
+                const setCount = parseInt(setDiv.querySelector(".set-count").value) || 0;
+                const starforce = setDiv.querySelector(".starforce").value || 0;
+
+                if (setType && setCount) {
+                    const setOption = SET_OPTIONS[setType][setCount] || {};
+                    const starforceOption = STARFORCE_OPTIONS[setType]?.[starforce] || {};
+                    STATS.forEach(stat => {
+                        stats[stat] += (setOption[stat] || 0) + (starforceOption[stat] || 0);
+                    });
+                }
+            });
+
+            return stats;
+        }
+
+        // 결과
+        function updateTotal() {
+            const prevStats = calculateStats("previous-options-container");
+            const afterStats = calculateStats("after-options-container");
+
+            STATS.forEach(stat => {
+                document.getElementById(`prev-${stat}`).textContent = formatStat(stat, prevStats[stat]);
+                document.getElementById(`after-${stat}`).textContent = formatStat(stat, afterStats[stat]);
+                document.getElementById(`diff-${stat}`).textContent = formatStat(stat, afterStats[stat] - prevStats[stat]);
+            });
+        }
+
+        // 스탯 포맷팅
+        function formatStat(stat, value) {
+            if (stat === "최댐") return (value / 100000000).toFixed(3) + "억";
+            return value.toFixed(1) + (stat === "최댐" ? "" : "%");
+        }
+
+        // 초기화
+        addSetOption();
+    </script>
+</body>
+</html>
